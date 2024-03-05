@@ -10,7 +10,7 @@ const ctx = canvas.getContext("2d");
 
 /** 캔버스 배경 이미지 */
 const bgImage = new Image();
-bgImage.src = "/assets/track.png";
+bgImage.src = "./assets/track.png";
 let bgX = 0;
 
 /** 점수 */
