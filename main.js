@@ -9,6 +9,7 @@ canvas.height = 500;
 const ctx = canvas.getContext("2d");
 
 /** 캔버스 배경 이미지 */
+const BG_MOVING_SPEED = 5;
 const bgImage = new Image();
 bgImage.src = "./assets/track.png";
 let bgX = 0;
@@ -24,9 +25,19 @@ const RTAN_INITIAL_X_POSITION = 10;
 const RTAN_INITIAL_Y_POSITION = 400;
 
 /** 장애물 변수 */
-const CACTUS_WIDTH = 30;
-const CACTUS_HEIGHT = 30;
+const CACTUS_WIDTH = 30; // 장애물 너비
+const CACTUS_HEIGHT = 30; // 장애물 높이
+const CACTUS_FREQUENCY = 50; // 장애물 생성 빈도
 
+/** 게임 변수 */
+let timer = 0; // 장애물 생성 시간
+let cactusArray = []; // 장애물 배열(*장애물이 여러개일 수 있기 때문에 배열로 관리함)
+let gameOver = false; // 게임 종료 여부
+let jump = false; // 점프 여부
+
+/**
+ * 게임을 재시작하는 함수
+ */
 function restartGame() {
   gameOver = false;
   cactusArray = [];
@@ -35,13 +46,15 @@ function restartGame() {
   animate();
 }
 
+// 게임 재시작 버튼 클릭 이벤트
 restartButton.addEventListener("click", function () {
   restartButton.style.display = "none";
   scoreText.innerHTML = "현재점수: " + 0;
   restartGame();
 });
 
-var rtan = {
+// 르탄이 객체
+const rtan = {
   x: RTAN_INITIAL_X_POSITION,
   y: RTAN_INITIAL_Y_POSITION,
   width: RTAN_WIDTH,
@@ -52,10 +65,11 @@ var rtan = {
   },
 };
 
+// 장애물 객체 생성을 위한 클래스
 class Cactus {
   constructor() {
     this.x = canvas.width;
-    this.y = Math.floor(Math.random() * 470);
+    this.y = Math.floor(Math.random() * (canvas.height - CACTUS_HEIGHT));
     this.width = CACTUS_WIDTH;
     this.height = CACTUS_HEIGHT;
   }
@@ -65,38 +79,38 @@ class Cactus {
   }
 }
 
-var timer = 0;
-var cactusArray = [];
-var gameOver = false;
-
+/**
+ * 게임 애니메이션 함수
+ */
 function animate() {
   if (gameOver) {
     return;
   }
 
+  // 배경 이미지 그리기
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(bgImage, bgX, 0, canvas.width, canvas.height);
   ctx.drawImage(bgImage, bgX + canvas.width, 0, canvas.width, canvas.height);
 
-  bgX -= 5;
+  bgX -= BG_MOVING_SPEED;
   if (bgX < -canvas.width) bgX = 0;
 
   timer++;
 
-  if (timer % 50 === 0) {
+  if (timer % CACTUS_FREQUENCY === 0) {
     var cactus = new Cactus();
     cactusArray.push(cactus);
   }
 
   cactusArray.forEach((a) => {
     // x가 0보다 작아지면 화면 밖으로 나가는 것이므로 삭제
-    if (a.x < -30) {
+    if (a.x < -CACTUS_WIDTH) {
       cactusArray.shift();
       score += 10;
       scoreText.innerHTML = "현재점수: " + score;
     }
 
-    a.x -= 7;
+    a.x -= 7; // 한 프레임이 지날 때마다 장애물을 왼쪽으로 7씩 이동
 
     if (collision(rtan, a)) {
       timer = 0;
@@ -136,8 +150,9 @@ function animate() {
 
 animate();
 
-// collision detection
-// check if two objects are colliding
+/**
+ * 충돌 체크 함수
+ */
 function collision(first, second) {
   return !(
     first.x > second.x + second.width ||
@@ -147,7 +162,6 @@ function collision(first, second) {
   );
 }
 
-var jump = false;
 document.addEventListener("keydown", function (e) {
   if (e.code === "Space") {
     jump = true;
