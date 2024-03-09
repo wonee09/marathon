@@ -1,11 +1,11 @@
-/** 최초 게임 시작 판단 */
-let gameStarted = false;
-
 /** 캔버스 */
 const canvas = document.getElementById("canvas");
 canvas.width = 800;
 canvas.height = 500;
 const ctx = canvas.getContext("2d");
+
+/** 최초 게임 시작 판단 */
+let gameStarted = false;
 
 /** 캔버스 관련 이미지 */
 const BG_MOVING_SPEED = 5;
@@ -25,6 +25,7 @@ const RTAN_INITIAL_Y_POSITION = 400;
 const OBSTACLE_WIDTH = 30; // 장애물 너비
 const OBSTACLE_HEIGHT = 30; // 장애물 높이
 const OBSTACLE_FREQUENCY = 50; // 장애물 생성 빈도
+const OBSTACLE_SPEED = 7; // 장애물 속도
 
 /** 게임 변수 */
 let timer = 0; // 장애물 생성 시간
@@ -45,28 +46,28 @@ defeatSound.src = "./assets/sounds/defeat2.mp3";
 /** 이미지 */
 // (1) 배경
 const bgImage = new Image();
-bgImage.src = "./assets/rtan_background.png";
+bgImage.src = "./assets/images/rtan_background.png";
 // (2) 게임 시작
 const startImage = new Image();
-startImage.src = "./assets/rtan_start.png";
+startImage.src = "./assets/images/rtan_start.png";
 // (3) 게임 오버
 const gameoverImage = new Image();
-gameoverImage.src = "./assets/rtan_gameover.png";
+gameoverImage.src = "./assets/images/rtan_gameover.png";
 // (4) 게임 재시작
 const restartImage = new Image();
-restartImage.src = "./assets/rtan_restart.png";
+restartImage.src = "./assets/images/rtan_restart.png";
 // (5) 달리는 르탄이 A
 const rtanAImage = new Image();
-rtanAImage.src = "./assets/rtan_running_a.png";
+rtanAImage.src = "./assets/images/rtan_running_a.png";
 // (6) 달리는 르탄이 B
 const rtanBImage = new Image();
-rtanBImage.src = "./assets/rtan_running_b.png";
+rtanBImage.src = "./assets/images/rtan_running_b.png";
 // (7) 게임 오버 르탄이
 const rtanCrashImage = new Image();
-rtanCrashImage.src = "./assets/rtan_crash.png";
+rtanCrashImage.src = "./assets/images/rtan_crash.png";
 // (8) 장애물
 const rtan_obstacle = new Image();
-rtan_obstacle.src = "./assets/rtan_obstacle.png";
+rtan_obstacle.src = "./assets/images/rtan_obstacle.png";
 
 /**
  * 게임 시작 화면을 그리는 함수
@@ -82,18 +83,6 @@ function drawStartScreen() {
   const imageY = canvas.height / 2 - imageHeight / 2;
 
   ctx.drawImage(startImage, imageX, imageY, imageWidth, imageHeight);
-}
-
-/**
- * 게임을 재시작하는 함수
- */
-function restartGame() {
-  gameOver = false;
-  obstacleArray = [];
-  timer = 0;
-  score = 0;
-  scoreText.innerHTML = "현재점수: " + score;
-  animate();
 }
 
 // 르탄이 객체
@@ -134,11 +123,6 @@ class Obstacle {
  * 게임 애니메이션 함수
  */
 function animate() {
-  if (!gameStarted) {
-    drawStartScreen();
-    return;
-  }
-
   if (gameOver) {
     return;
   }
@@ -152,8 +136,6 @@ function animate() {
 
   bgX -= BG_MOVING_SPEED;
   if (bgX < -canvas.width) bgX = 0;
-
-  timer++;
 
   if (timer % OBSTACLE_FREQUENCY === 0) {
     const obstacle = new Obstacle();
@@ -172,8 +154,6 @@ function animate() {
         scoreSound.currentTime = 0; // 오디오 재생 위치를 시작으로 재설정
       }, 350); // 200ms 후에 오디오 일시정지
     }
-
-    a.x -= 7; // 한 프레임이 지날 때마다 장애물을 왼쪽으로 7씩 이동
 
     if (collision(rtan, a)) {
       timer = 0;
@@ -202,6 +182,8 @@ function animate() {
       return;
     }
 
+    a.x -= OBSTACLE_SPEED; // 한 프레임이 지날 때마다 장애물을 왼쪽으로 일정량 이동
+
     a.draw();
   });
 
@@ -211,21 +193,31 @@ function animate() {
     } else {
       rtan.y -= 3;
     }
-    timer++;
   } else {
     if (rtan.y < 400) {
       rtan.y += 3;
     }
   }
-  if (timer > 100) {
+  if (timer > 50) {
     jump = false;
     timer = 0;
   }
 
   rtan.draw();
-  if (!gameOver) {
-    requestAnimationFrame(animate);
-  }
+  timer++;
+  requestAnimationFrame(animate);
+}
+
+/**
+ * 게임을 재시작하는 함수
+ */
+function restartGame() {
+  gameOver = false;
+  obstacleArray = [];
+  timer = 0;
+  score = 0;
+  scoreText.innerHTML = "현재점수: " + score;
+  animate();
 }
 
 /**
